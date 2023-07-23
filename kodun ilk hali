@@ -1,0 +1,72 @@
+# workbook() fonksiyonu var o yüzden üzerine yazıyor
+import tkinter as tk
+import openpyxl
+
+def ariza_ekle_clicked():
+    ariza_window = tk.Toplevel()
+    ariza_window.geometry("1200x400")
+    ariza_window.configure(bg="white")
+    ariza_window.title("Arıza Kaydı")
+
+    # Sütun başlıkları
+    labels = ["HTR İŞ EMRİ", "KART STOK NO", "SN", "ONARILACAK KONUM", "ARIZA AÇIKLAMASI",
+              "ARIZAYI TESPİT EDEN PERSONEL", "ONARIM DURUMU", "ONARIMA TESLİM EDİLEN TARİH"]
+
+    # Kullanıcı giriş alanları için boş listeler
+    entry_list = []
+
+    # Sütun başlıklarını oluşturma
+    for i, label in enumerate(labels):
+        label = tk.Label(ariza_window, text=label, bg="white")
+        label.grid(row=0, column=i, padx=5, pady=5)
+
+        # Kullanıcı giriş alanları oluşturma
+        entry = tk.Entry(ariza_window)
+        entry.grid(row=1, column=i, padx=5, pady=5)
+        entry_list.append(entry)
+
+    # Kaydet butonu
+    def kaydet_clicked():
+        # Kullanıcının girdiği verileri alıp işleme örneği
+        data = []
+        for entry in entry_list:
+            if not entry.get():
+                show_error()
+                return
+            data.append(entry.get())
+
+        # Verileri Excel dosyasına kaydetme
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.append(data)    # Kullanıcının girdiği verileri ekliyoruz
+
+        # Excel dosyasını kaydediyoruz
+        wb.save('C:\\Users\\kdtest7\\Desktop\\hata_kaydı.xlsx')
+
+    # Kaydet butonunu oluşturma
+    btn_kaydet = tk.Button(ariza_window, text="Kaydet", command=kaydet_clicked)
+    btn_kaydet.grid(row=2, columnspan=len(labels), pady=10)
+
+def show_error():
+    # Hatalı işlem penceresini oluşturma
+    error_window = tk.Toplevel()
+    error_window.geometry("300x100")
+    error_window.configure(bg="white")
+    error_window.title("Hatalı İşlem")
+
+    # Hata mesajını gösterme
+    error_label = tk.Label(error_window, text="Eksik veri girişi yapıldı!", bg="white")
+    error_label.pack(pady=20)
+
+# Yeni bir Tkinter penceresi oluşturma
+table = tk.Tk()
+table.geometry("500x500")
+table.configure(bg="white")
+table.title("Veri Giriş Kontrol")
+
+# Buton oluşturma
+btn_ariza_ekle = tk.Button(table, text="Arıza Ekle", command=ariza_ekle_clicked)
+btn_ariza_ekle.pack(side=tk.BOTTOM) # Butonu pencerenin alt kısmına yerleştirme
+
+# Pencereyi açma
+table.mainloop()
