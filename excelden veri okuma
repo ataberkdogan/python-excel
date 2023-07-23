@@ -1,0 +1,85 @@
+import tkinter as tk
+from tkinter import ttk
+import pandas as pd
+
+def update_eleman_combobox(event):
+    selected_stok_numarasi = combobox_var.get()
+    elemanlar = veriler[veriler["STOK NO"] == selected_stok_numarasi]["ARIZALI MALZEME"].drop_duplicates().tolist()
+    combobox_ariza["values"] = elemanlar
+    combobox_ariza.set("")
+    
+    # Seçilen stok numarasına göre ilgili kartın arızalı eleman sayısını ve toplam arızalı eleman sayısını bul
+    kart_elemanlar = veriler[veriler["STOK NO"] == selected_stok_numarasi]["ARIZALI MALZEME"]
+    arizali_eleman_sayisi = kart_elemanlar.shape[0]
+    toplam_arizali_eleman_sayisi = veriler[veriler["ARIZALI MALZEME"].isin(elemanlar)].shape[0]
+    
+    # Yeni metin alanlarına karttaki arızalı eleman sayısını ve toplam arızalı eleman sayısını yazdır
+    output_label_arizali_sayisi.config(text=f"\nKarttaki Arızalı Eleman Sayısı: {arizali_eleman_sayisi}")
+    
+    # Arızalı olma olasılığını hesapla ve yazdır
+    output_label_olasilik.config(text="Eleman Arıza Olasılığı")
+    for eleman in elemanlar:
+        eleman_olasilik = kart_elemanlar.value_counts(normalize=True)[eleman] * 100
+        output_label_olasilik.config(text=output_label_olasilik.cget("text") + f"\n{eleman} ==> Arızalı Olma Olasılığı : {eleman_olasilik:.2f}%")
+
+def update_ariza_label(event):
+    selected_ariza = combobox_var_ariza.get()
+    selected_stok_numarasi = combobox_var.get()
+    
+    # Find the issue (arıza) for the selected faulty item (arızalı malzeme) based on the "ARIZA" column in the excel
+    ariza = veriler[(veriler["STOK NO"] == selected_stok_numarasi) & (veriler["ARIZALI MALZEME"] == selected_ariza)]["ARIZA"].values[0]
+    
+    # Display the determined issue in the newly created label
+    output_label_ariza.config(text=f"\n{selected_ariza} ==> Arıza Türü: {ariza}")
+    
+    ariza_aciklamasi = veriler[(veriler["STOK NO"] == selected_stok_numarasi) & (veriler["ARIZALI MALZEME"] == selected_ariza)]["ARIZA AÇIKLAMASI"].values[0]
+    
+    # Display the determined issue in the newly created label
+    output_label_ariza_aciklamasi.config(text=f"\n{selected_ariza} ==> Arıza Açıklaması: {ariza_aciklamasi}")
+
+# Ana pencere oluşturma
+table = tk.Tk()
+table.title("Arıza Tespit Portalı")
+table.geometry("500x500")
+table.configure(bg="white")
+
+# Combobox oluşturma ve verileri yükleme
+veriler = pd.read_excel(io='C:\\Users\\kdtest7\\Desktop\\hata_deneme.xlsx', usecols=["STOK NO", "ARIZALI MALZEME", "ARIZA", "ARIZA AÇIKLAMASI"])
+stok_numaralari_unique = veriler["STOK NO"].drop_duplicates().tolist()
+
+label_stok = ttk.Label(table, text="Stok Numarası")
+label_stok.pack(pady=10)
+
+# Stok numaralarının combobox'a atandığı yer
+combobox_var = tk.StringVar()
+combobox_stok = ttk.Combobox(table, textvariable=combobox_var, values=stok_numaralari_unique, font=("Arial", 12))
+combobox_stok.pack()
+
+output_label_arizali_sayisi = ttk.Label(table, text="", font=("Arial", 12), foreground="green")
+output_label_arizali_sayisi.pack()
+
+label_ariza = ttk.Label(table, text="Arızalı Malzeme")
+label_ariza.pack(pady=10)
+
+combobox_var_ariza = tk.StringVar()
+combobox_ariza = ttk.Combobox(table, textvariable=combobox_var_ariza, values=[], font=("Arial", 12))
+combobox_ariza.pack()
+
+output_label_toplam_arizali_sayisi = ttk.Label(table, text="", font=("Arial", 12), foreground="green")
+output_label_toplam_arizali_sayisi.pack()
+
+output_label_olasilik = ttk.Label(table, text="", font=("Arial", 12), foreground="red")
+output_label_olasilik.pack()
+
+# Elemanlara ait arızaların yazdırıldığı textbox
+output_label_ariza = ttk.Label(table, text="", font=("Arial", 12), foreground="blue")
+output_label_ariza.pack()
+
+# Arıza açıklamalarının yazdırıldığı textbox
+output_label_ariza_aciklamasi = ttk.Label(table, text="", font=("Arial", 12), foreground="black")
+output_label_ariza_aciklamasi.pack()
+
+combobox_stok.bind("<<ComboboxSelected>>", update_eleman_combobox)
+combobox_ariza.bind("<<ComboboxSelected>>", update_ariza_label)
+
+table.mainloop()
